@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
+using System.Configuration;
 
 namespace ConectareBaza
 {
@@ -15,13 +16,19 @@ namespace ConectareBaza
     {
         SqlDataAdapter da1 = new SqlDataAdapter();
         DataSet ds1 = new DataSet();
+
+        List<TextBox> textBoxList;
+
+        SqlDataAdapter da3 = new SqlDataAdapter();
+        DataSet ds3 = new DataSet();
+
         BindingSource bs1 = new BindingSource();
 
         SqlDataAdapter da2 = new SqlDataAdapter();
         DataSet ds2 = new DataSet();
         BindingSource bs2 = new BindingSource();
 
-        SqlConnection cs = new SqlConnection("Data Source = DESKTOP-039QRBD\\SQLEXPRESS ;Initial Catalog = Fabrica;Integrated Security = True;");
+        SqlConnection cs;
         public Form1()
         {
             try
@@ -36,7 +43,14 @@ namespace ConectareBaza
         //Afiseaza avion;
         private void button1_Click(object sender, EventArgs e)
         {
+            cs.Open();
+            string selectcmd = ConfigurationManager.AppSettings["ParentSelectCmd"];
+            da3.SelectCommand = new SqlCommand(selectcmd, cs);
+            da3.Fill(ds3, "ParentTable");
 
+            cs.Close();
+
+            /*
             try
             {
                 da1.SelectCommand = new SqlCommand("SELECT * FROM Avion", cs);
@@ -49,11 +63,40 @@ namespace ConectareBaza
             {
                 MessageBox.Show(ex.Message);
             }
+            */
 
         }
         //Sterge din motor dupa avion
         private void button2_Click(object sender, EventArgs e)
         {
+            if (dataGridView2.SelectedCells.Count > 0)
+            {
+                cs.Open();
+                String value;
+                int selectedrowindex = dataGridView2.SelectedCells[0].RowIndex;
+
+                DataGridViewRow selectedRow = dataGridView2.Rows[selectedrowindex];
+
+                string toDeletedId = Convert.ToString(textBox2.Text);
+
+                string deleteCmd = ConfigurationSettings.AppSettings["ChildDeleteCmd"];
+                da3.DeleteCommand = new SqlCommand(deleteCmd, cs);
+
+                value = "@value".ToString();
+                da3.DeleteCommand.Parameters.Add(value, SqlDbType.VarChar).Value = toDeletedId;
+
+                da3.DeleteCommand.ExecuteNonQuery();
+                ds3.Tables["ChildTable"].Clear();
+                string selectcmd = ConfigurationManager.AppSettings["ChildSelectCmd"];
+                da3.SelectCommand = new SqlCommand(selectcmd, cs);
+                da3.Fill(ds3, "ChildTable");
+
+                cs.Close();
+            }
+            else
+                MessageBox.Show("Selectati o linie");
+
+            /*
             try
             {
                 int Acod;
@@ -73,10 +116,41 @@ namespace ConectareBaza
             }
 
             button4_Click(null, null);
+            */
         }
         //Insereaza in Motor;
         private void button3_Click(object sender, EventArgs e)
         {
+            cs.Open();
+            string value1;
+            string value2;
+            int i;
+            int selectedRowindex = dataGridView1.SelectedCells[0].RowIndex;
+
+            string foreingID = dataGridView1.Rows[selectedRowindex].Cells[0].Value.ToString();
+
+            string insertCmd = ConfigurationSettings.AppSettings["ChildInsertCmd"];
+            da3.InsertCommand = new SqlCommand(insertCmd, cs);
+
+            int nrColumns = ds3.Tables["ChildTable"].Columns.Count;
+
+   
+            value1 = "@value1".ToString();
+            da3.InsertCommand.Parameters.Add(value1, SqlDbType.VarChar).Value = textBox3.Text;
+
+            value2 = "@value2".ToString();
+            da3.InsertCommand.Parameters.Add(value2, SqlDbType.VarChar).Value = textBox4.Text;
+
+            da3.InsertCommand.ExecuteNonQuery();
+
+            ds3.Tables["ChildTable"].Clear();
+            string selectcmd = ConfigurationManager.AppSettings["ChildSelectCmd"];
+            da3.SelectCommand = new SqlCommand(selectcmd, cs);
+            da3.Fill(ds3, "ChildTable");
+
+            cs.Close();
+
+            /*
             try
             {
                 da2.InsertCommand = new SqlCommand("INSERT INTO Motor (NumeM,Acod) VALUES(@d,@c)", cs);
@@ -92,10 +166,18 @@ namespace ConectareBaza
                 MessageBox.Show(ex.Message);
                 cs.Close();
             }
+            */
         }
         //Afiseaza motor;
         private void button4_Click(object sender, EventArgs e)
         {
+            cs.Open();
+            string selectcmd = ConfigurationManager.AppSettings["ChildSelectCmd"];
+            da3.SelectCommand = new SqlCommand(selectcmd, cs);
+            da3.Fill(ds3, "ChildTable");
+            cs.Close();
+
+            /*
             try
             {
                 da2.SelectCommand = new SqlCommand("SELECT * FROM Motor", cs);
@@ -108,11 +190,13 @@ namespace ConectareBaza
             {
                 MessageBox.Show(ex.Message);
             }
+            */
         }
 
         //Afiseaza motor selectand un element din avion;
         private void update_gridview(String id)
         {
+            /*
             try
             {
                 int x = Int32.Parse(id);
@@ -131,6 +215,7 @@ namespace ConectareBaza
             {
                 MessageBox.Show(ex.Message);
             }
+            */
         }
         private void dataGridView2_CellClick(object sender, DataGridViewCellEventArgs e)
 
@@ -154,6 +239,41 @@ namespace ConectareBaza
         //Update motor;
         private void button5_Click(object sender, EventArgs e)
         {
+            //actualizare
+            if (dataGridView2.SelectedCells.Count > 0)
+            {
+                cs.Open();
+                string updateCmd = ConfigurationSettings.AppSettings["ChildUpdateCmd"];
+                da3.UpdateCommand = new SqlCommand(updateCmd, cs);
+
+                
+                String motorId = dataGridView2.CurrentRow.Cells[0].Value.ToString();
+
+                int i = 0;
+                string value1;
+                string value2;
+                string value3;
+
+                value1 = "@value1".ToString();
+                da3.UpdateCommand.Parameters.Add(value1, SqlDbType.VarChar).Value = textBox3.Text;
+
+                value2 = "@value2" .ToString();
+                da3.UpdateCommand.Parameters.Add(value2, SqlDbType.VarChar).Value = textBox4.Text;
+
+                value3 = "@value3".ToString();
+                da3.UpdateCommand.Parameters.Add(value3, SqlDbType.VarChar).Value = motorId;
+
+                da3.UpdateCommand.ExecuteNonQuery();
+
+                ds3.Tables["ChildTable"].Clear();
+                string selectcmd = ConfigurationManager.AppSettings["ChildSelectCmd"];
+                da3.SelectCommand = new SqlCommand(selectcmd, cs);
+                da3.Fill(ds2, "ChildTable");
+
+                cs.Close();
+            }
+
+            /*
             try
             {
                 int codM;
@@ -177,6 +297,45 @@ namespace ConectareBaza
             {
                 MessageBox.Show(ex.Message);
             }
+            */
+        }
+
+        public void getData()
+        {
+            string parentId = ConfigurationManager.AppSettings["idParent"];
+
+            DataRelation relation = new DataRelation("Parent_Child_FK",
+            ds3.Tables["ParentTable"].Columns[parentId],
+            ds3.Tables["ChildTable"].Columns[parentId]);
+            ds3.Relations.Add(relation);
+
+            bs1.DataSource = ds3;
+            bs1.DataMember = "ParentTable";
+
+            bs2.DataSource = bs1;
+            bs2.DataMember = "Parent_Child_FK";
+        }
+
+        public void populateDataGridViews()
+        {
+            dataGridView1.DataSource = bs1;
+            dataGridView2.DataSource = bs2;
+            getData();
+            dataGridView2.AutoResizeColumns();
+            dataGridView1.AutoGenerateColumns = true;
+        }
+
+        public void fillDataSet()
+        {
+            cs.Open();
+            string selectcmd = ConfigurationManager.AppSettings["ParentSelectCmd"];
+            da3.SelectCommand = new SqlCommand(selectcmd, cs);
+            da3.Fill(ds3, "ParentTable");
+
+            selectcmd = ConfigurationManager.AppSettings["ChildSelectCmd"];
+            da3.SelectCommand = new SqlCommand(selectcmd, cs);
+            da3.Fill(ds3, "ChildTable");
+            cs.Close();
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -186,6 +345,12 @@ namespace ConectareBaza
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            ConnectionStringSettings conSet = ConfigurationManager.ConnectionStrings["conStr"];
+            string connectionString = conSet.ConnectionString;
+            cs = new SqlConnection(connectionString);
+
+            fillDataSet();
+            populateDataGridViews();
 
         }
         private void label1_Click(object sender, EventArgs e)
